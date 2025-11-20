@@ -7,7 +7,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // Configurar axios con la URL base
 const apiClient = axios.create({
-  baseURL: API_BASE_URL
+  baseURL: API_BASE_URL,
+  timeout: 30000, // 30 segundos de timeout
 })
 
 function InfoPanel({ ciudad }) {

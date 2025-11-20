@@ -8,9 +8,16 @@ import './App.css'
 // Configurar la URL base de la API
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+// Debug: mostrar la URL que se está usando (solo en desarrollo)
+if (import.meta.env.DEV) {
+  console.log('🔧 API Base URL:', API_BASE_URL)
+  console.log('🔧 VITE_API_URL env:', import.meta.env.VITE_API_URL)
+}
+
 // Configurar axios con la URL base
 const apiClient = axios.create({
-  baseURL: API_BASE_URL
+  baseURL: API_BASE_URL,
+  timeout: 30000, // 30 segundos de timeout
 })
 
 function App() {
