@@ -35,8 +35,24 @@ if not UNSPLASH_ACCESS_KEY:
     print("⚠️  ADVERTENCIA: UNSPLASH_ACCESS_KEY no encontrada. Las fotos no estarán disponibles.")
 
 # Configurar CORS para permitir peticiones desde el frontend
-# En producción, permite cualquier origen (o especifica tu dominio de Vercel)
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# En producción, permite cualquier origen o el especificado en la variable de entorno
+ALLOWED_ORIGINS_ENV = os.getenv("ALLOWED_ORIGINS", "")
+
+# Determinar si estamos en producción (Render siempre tiene PORT)
+IS_PRODUCTION = os.getenv("PORT") is not None
+
+if ALLOWED_ORIGINS_ENV:
+    # Si hay una variable de entorno, usa esa lista
+    ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
+elif IS_PRODUCTION:
+    # En producción (Render), permite todos los orígenes
+    ALLOWED_ORIGINS = ["*"]
+else:
+    # En desarrollo, solo localhost
+    ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:5173",  # Puerto por defecto de Vite
+    ]
 
 app.add_middleware(
     CORSMiddleware,
