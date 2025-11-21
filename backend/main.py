@@ -77,9 +77,23 @@ app.add_middleware(
     **cors_config
 )
 
-# Agregar headers CORS manualmente como respaldo
+# Agregar headers CORS manualmente como respaldo y manejar OPTIONS
 @app.middleware("http")
 async def add_cors_headers(request, call_next):
+    # Si es una petición OPTIONS (preflight), responder inmediatamente
+    if request.method == "OPTIONS":
+        from fastapi.responses import Response
+        origin = request.headers.get("origin")
+        headers = {
+            "Access-Control-Allow-Origin": origin if origin else "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "3600",
+        }
+        return Response(status_code=200, headers=headers)
+    
+    # Para otras peticiones, agregar headers CORS
     response = await call_next(request)
     # Si estamos en producción, agregar headers CORS manualmente
     if IS_PRODUCTION:
