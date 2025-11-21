@@ -49,7 +49,8 @@ elif IS_PRODUCTION:
     # En producción (Render), permite todos los orígenes usando regex
     # Esto permite cualquier dominio (incluyendo Vercel)
     ALLOWED_ORIGINS = []
-    ALLOW_ORIGIN_REGEX = r".*"  # Permite cualquier origen
+    # Permite cualquier origen que termine en .vercel.app o cualquier otro dominio
+    ALLOW_ORIGIN_REGEX = r"https?://.*"  # Permite cualquier origen HTTP/HTTPS
 else:
     # En desarrollo, solo localhost
     ALLOWED_ORIGINS = [
@@ -61,8 +62,9 @@ else:
 # Configurar CORS
 cors_config = {
     "allow_credentials": True,
-    "allow_methods": ["*"],
+    "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["*"],
+    "expose_headers": ["*"],
 }
 
 if ALLOW_ORIGIN_REGEX:
@@ -74,6 +76,20 @@ app.add_middleware(
     CORSMiddleware,
     **cors_config
 )
+
+# Agregar headers CORS manualmente como respaldo
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    # Si estamos en producción, agregar headers CORS manualmente
+    if IS_PRODUCTION:
+        origin = request.headers.get("origin")
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
 class InformacionViaje(BaseModel):
     destino: str = ""
