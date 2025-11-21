@@ -35,7 +35,7 @@ if not UNSPLASH_ACCESS_KEY:
     print("⚠️  ADVERTENCIA: UNSPLASH_ACCESS_KEY no encontrada. Las fotos no estarán disponibles.")
 
 # Configurar CORS para permitir peticiones desde el frontend
-# En producción, permite cualquier origen o el especificado en la variable de entorno
+# En producción, permite cualquier origen de Vercel o el especificado en la variable de entorno
 ALLOWED_ORIGINS_ENV = os.getenv("ALLOWED_ORIGINS", "")
 
 # Determinar si estamos en producción (Render siempre tiene PORT)
@@ -44,22 +44,35 @@ IS_PRODUCTION = os.getenv("PORT") is not None
 if ALLOWED_ORIGINS_ENV:
     # Si hay una variable de entorno, usa esa lista
     ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
+    ALLOW_ORIGIN_REGEX = None
 elif IS_PRODUCTION:
-    # En producción (Render), permite todos los orígenes
-    ALLOWED_ORIGINS = ["*"]
+    # En producción (Render), permite todos los orígenes usando regex
+    # Esto permite cualquier dominio (incluyendo Vercel)
+    ALLOWED_ORIGINS = []
+    ALLOW_ORIGIN_REGEX = r".*"  # Permite cualquier origen
 else:
     # En desarrollo, solo localhost
     ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://localhost:5173",  # Puerto por defecto de Vite
     ]
+    ALLOW_ORIGIN_REGEX = None
+
+# Configurar CORS
+cors_config = {
+    "allow_credentials": True,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"],
+}
+
+if ALLOW_ORIGIN_REGEX:
+    cors_config["allow_origin_regex"] = ALLOW_ORIGIN_REGEX
+else:
+    cors_config["allow_origins"] = ALLOWED_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    **cors_config
 )
 
 class InformacionViaje(BaseModel):
